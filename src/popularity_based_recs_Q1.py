@@ -205,7 +205,22 @@ country_specific_recommendations = get_top_recommendations(relevance_scores_by_c
 # Step 4: Calculate metrics for general and country-specific predictions
 sales_test_df = pd.read_csv('data/sales/sales_2024-10-26_2024-11-01.csv')
 actual_purchases = sales_test_df.groupby(['customer_email', 'shipping_country'])['variant_sku'].apply(list).reset_index()
+
+# most frequent campaing in last week of sales df
+prev_week = sales_df.query('hour > "2024-11-18"')
+prev_week = prev_week.merge(
+    prod_df[['Variant SKU','Campaign']], 
+    how='inner', 
+    left_on='variant_sku', 
+    right_on='Variant SKU'
+).drop(columns=['Variant SKU'])
+
+
+prev_week_pop = prev_week[['order_name','Campaign']].groupby('Campaign').count().sort_values(by = 'order_name', ascending=False)
+
+
 #%%
+
 # General Recommendations Metrics
 precision_at_9, recall_at_9 = calculate_metrics(general_recommendations, actual_purchases)
 print(f"General Recommendations - Precision@9: {precision_at_9:.4f}, Recall@9: {recall_at_9:.4f}")
@@ -215,10 +230,10 @@ precision_at_9, recall_at_9 = calculate_metrics(country_specific_recommendations
 print(f"Country-Specific Recommendations - Precision@9: {precision_at_9:.4f}, Recall@9: {recall_at_9:.4f}")
 
 # Step 5: Campaign-filtered Recommendations Metrics
-filtered_campaign_df = relevance_with_campaign[relevance_with_campaign['Campaign'].str.startswith('2410', na=False)]
+filtered_campaign_df = relevance_with_campaign[relevance_with_campaign['Campaign'].str.startswith('2411', na=False)]
 campaign_recommendations = get_top_recommendations(filtered_campaign_df, ['shipping_country'], k=9)
 
 precision_at_9, recall_at_9 = calculate_metrics(campaign_recommendations, actual_purchases)
-print(f"Country-Specific Campaign '2410' Recommendations - Precision@9: {precision_at_9:.4f}, Recall@9: {recall_at_9:.4f}")
+print(f"Country-Specific Campaign '2411' Recommendations - Precision@9: {precision_at_9:.4f}, Recall@9: {recall_at_9:.4f}")
 
 # %%
